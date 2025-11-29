@@ -43,6 +43,11 @@ export interface TalentReport {
   };
 }
 
+export interface SavedTalentReport extends TalentReport {
+  id: string;
+  savedAt: number;
+}
+
 export enum LoadingState {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

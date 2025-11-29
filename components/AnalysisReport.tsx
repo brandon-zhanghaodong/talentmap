@@ -1,5 +1,5 @@
-import React from 'react';
-import { TalentReport } from '../types';
+import React, { useState } from 'react';
+import { TalentReport, SavedTalentReport } from '../types';
 import { 
   Briefcase, 
   MapPin, 
@@ -9,9 +9,10 @@ import {
   MessageCircle, 
   Globe, 
   Award,
-  Download,
   FileText,
-  Table as TableIcon
+  Table as TableIcon,
+  Bookmark,
+  Check
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -31,6 +32,32 @@ interface AnalysisReportProps {
 const COLORS = ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'];
 
 const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = () => {
+    try {
+      const savedReports: SavedTalentReport[] = JSON.parse(localStorage.getItem('talentMap_saved') || '[]');
+      
+      // Check if already saved (optional, basic check by job title + summary length to avoid exact duplicates)
+      const alreadySaved = savedReports.some(r => r.jobTitle === data.jobTitle && r.summary === data.summary);
+      
+      if (!alreadySaved) {
+        const newReport: SavedTalentReport = {
+          ...data,
+          id: crypto.randomUUID(),
+          savedAt: Date.now()
+        };
+        savedReports.unshift(newReport);
+        localStorage.setItem('talentMap_saved', JSON.stringify(savedReports));
+      }
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (e) {
+      console.error("Failed to save report", e);
+      alert("保存失败，请检查浏览器设置");
+    }
+  };
 
   const downloadFile = (content: string, fileName: string, mimeType: string) => {
     const blob = new Blob([content], { type: mimeType });
@@ -202,20 +229,31 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
             <h2 className="text-3xl font-bold text-slate-800">{data.jobTitle}</h2>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button 
+              onClick={handleSave}
+              className={`flex items-center justify-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                isSaved 
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600'
+              }`}
+            >
+              {isSaved ? <Check className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+              {isSaved ? '已收藏' : '收藏'}
+            </button>
             <button 
               onClick={handleExportCSV}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 hover:text-indigo-600 transition-colors"
             >
               <TableIcon className="w-4 h-4" />
-              导出 CSV
+              CSV
             </button>
             <button 
               onClick={handleExportHTML}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 hover:text-indigo-600 transition-colors"
             >
               <FileText className="w-4 h-4" />
-              导出 HTML
+              HTML
             </button>
           </div>
         </div>
