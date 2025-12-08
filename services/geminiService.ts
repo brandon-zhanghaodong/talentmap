@@ -82,12 +82,8 @@ const talentReportSchema: Schema = {
 };
 
 export const generateTalentReport = async (jobDescription: string): Promise<TalentReport> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key is missing. Please check your environment configuration.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Use process.env.API_KEY as per guidelines. 
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const systemPrompt = `
     你是一名顶尖的“人才战略分析师”，专门为中国市场的招聘HR提供深度的人才地图分析。
@@ -110,7 +106,7 @@ export const generateTalentReport = async (jobDescription: string): Promise<Tale
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
         responseSchema: talentReportSchema,
-        temperature: 0.4, // Lower temperature for more factual/analytical responses
+        temperature: 0.4,
       },
     });
 
